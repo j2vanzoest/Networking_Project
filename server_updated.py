@@ -5,6 +5,7 @@ import os
 
 SERVER_PORT = 21000
 FIGHT_SERVER_ADDRESS = ("127.0.0.1", 22000)
+fight_logs = []
 BUFFER_SIZE = 4096
 AVATAR_FOLDER = "avatars"
 
