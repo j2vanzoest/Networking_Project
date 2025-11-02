@@ -1,6 +1,5 @@
 import socket
 import json
-import os
 
 SERVER_ADDRESS = ("127.0.0.1", 21000)
 BUFFER_SIZE = 4096
@@ -11,101 +10,125 @@ def send_request(sock, request):
     return json.loads(response_data.decode())
 
 def login(sock):
-    username = input("Enter your username (A, B, C, D): ").strip()
+    username = input("Enter your username: ").strip()
     password = input("Enter your password: ").strip()
-    request = {
-        "action": "login",
-        "username": username,
-        "password": password
-    }
+    request = {"action": "login", "username": username, "password": password}
     response = send_request(sock, request)
     if response.get("status") == "success":
-        print(f"[Client] Login successful for {username}")
+        print("[Client] Login successful!")
         return username
     else:
-        print(f"[Client] Login failed: {response.get('message')}")
+        print("[Client] Login failed.")
         return None
 
 def assign_strengths(sock, username):
-    print("Assign your strengths (total must equal 10, each between 0 and 3):")
-    strengths = {}
-    total = 0
-    for item in ["sword", "shield", "slaying_potion", "healing_potion"]:
-        while True:
-            try:
-                value = int(input(f"{item}: "))
-                if 0 <= value <= 3:
-                    strengths[item] = value
-                    total += value
-                    break
-                else:
-                    print("Value must be between 0 and 3.")
-            except ValueError:
-                print("Please enter a valid integer.")
-    if total != 10:
-        print("[Client] Invalid total strength. Must equal 10.")
+    print("Assign your strengths (total must be 10, max 3 per item):")
+    try:
+        sword = int(input("Sword: "))
+        shield = int(input("Shield: "))
+        slaying_potion = int(input("Slaying Potion: "))
+        healing_potion = int(input("Healing Potion: "))
+    except ValueError:
+        print("[Client] Invalid input.")
         return
-    request = {
-        "action": "assign_strengths",
-        "username": username,
-        "strengths": strengths
+    strengths = {
+        "sword": sword,
+        "shield": shield,
+        "slaying_potion": slaying_potion,
+        "healing_potion": healing_potion
     }
+    request = {"action": "assign_strengths", "username": username, "strengths": strengths}
     response = send_request(sock, request)
     print(f"[Client] {response.get('message')}")
 
-def upload_avatar(sock, username):
-    avatar_path = input("Enter the path to your avatar image (JPG): ").strip()
-    if not os.path.isfile(avatar_path):
-        print("[Client] File not found.")
+def view_active_users(sock):
+    request = {"action": "get_active_users"}
+    response = send_request(sock, request)
+    print("[Client] Active users:", response.get("active_users"))
+
+def send_fight_request(sock, username):
+    boss = input("Enter the username of the gamer you want to fight: ").strip()
+    item = input("Choose item (sword/slaying_potion): ").strip()
+    try:
+        strength = int(input("Enter strength to use (0-3): ").strip())
+    except ValueError:
+        print("[Client] Invalid strength.")
         return
-    with open(avatar_path, "rb") as f:
-        avatar_data = list(f.read())
+
     request = {
-        "action": "upload_avatar",
+        "action": "fight_request",
         "username": username,
-        "filename": os.path.basename(avatar_path),
-        "avatar_data": avatar_data
+        "boss": boss,
+        "fighting_item": item,
+        "fighting_strength": strength
     }
     response = send_request(sock, request)
     print(f"[Client] {response.get('message')}")
+    if "updated_state" in response:
+        print("[Client] Your updated state:")
+        print(json.dumps(response["updated_state"], indent=2))
 
-def get_active_users(sock, username):
-    request = {
-        "action": "get_active_users",
-        "username": username
-    }
+def view_fight_logs(sock):
+    request = {"action": "get_fight_logs"}
     response = send_request(sock, request)
     if response.get("status") == "success":
-        print("[Client] Active users:")
-        for user in response.get("active_users", []):
-            print(f"- {user}")
+        print("\n[Client] Confirmed Fight Logs:")
+        print("{:<10} {:<10} {:<15} {:<10} {:<10}".format("Requester", "Boss", "Item", "Strength", "Winner"))
+        for log in response.get("logs", []):
+            print("{:<10} {:<10} {:<15} {:<10} {:<10}".format(
+                log["requester"], log["boss"], log["fighting_item"],
+                log["fighting_strength"], log["winner"]
+            ))
     else:
-        print(f"[Client] Failed to get active users: {response.get('message')}")
+        print("[Client] Failed to retrieve logs.")
+
+def view_active_gamer_info(sock):
+    request = {"action": "get_active_gamer_info"}
+    response = send_request(sock, request)
+    if response.get("status") == "success":
+        print("\n[Client] Active Gamers Info:")
+        print("{:<10} {:<6} {:<6} {:<15} {:<15} {:<6}".format(
+            "Username", "Sword", "Shield", "Slaying Potion", "Healing Potion", "Lives"
+        ))
+        for user, info in response.get("gamers", {}).items():
+            print("{:<10} {:<6} {:<6} {:<15} {:<15} {:<6}".format(
+                user, info["sword"], info["shield"],
+                info["slaying_potion"], info["healing_potion"], info["lives"]
+            ))
+    else:
+        print("[Client] Failed to retrieve gamer info.")
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    username = None
-    while not username:
-        username = login(sock)
+    username = login(sock)
+    if not username:
+        return
+
     while True:
-        print("\nChoose an action:")
+        print("\nMenu:")
         print("1. Assign strengths")
-        print("2. Upload avatar")
-        print("3. View active users")
-        print("4. Quit")
+        print("2. View active users")
+        print("3. Fight another gamer")
+        print("4. View fight logs")
+        print("5. View full info of active gamers")
+        print("6. Quit")
         choice = input("Enter your choice: ").strip()
+
         if choice == "1":
             assign_strengths(sock, username)
         elif choice == "2":
-            upload_avatar(sock, username)
+            view_active_users(sock)
         elif choice == "3":
-            get_active_users(sock, username)
+            send_fight_request(sock, username)
         elif choice == "4":
-            print("[Client] Exiting...")
+            view_fight_logs(sock)
+        elif choice == "5":
+            view_active_gamer_info(sock)
+        elif choice == "6":
+            print("[Client] Goodbye!")
             break
         else:
-            print("[Client] Invalid choice. Try again.")
-    sock.close()
+            print("[Client] Invalid choice.")
 
 if __name__ == "__main__":
     main()
