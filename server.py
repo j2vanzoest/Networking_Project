@@ -1,4 +1,3 @@
-
 import socket
 import threading
 import json
@@ -7,9 +6,11 @@ import os
 SERVER_PORT = 21000
 BUFFER_SIZE = 4096
 AVATAR_FOLDER = "avatars"
+FIGHT_SERVER_ADDRESS = ("127.0.0.1", 22000)
 
-# Create avatar folder if it doesn't exist
 os.makedirs(AVATAR_FOLDER, exist_ok=True)
+
+fight_logs = []
 
 class GamerManager:
     def __init__(self):
@@ -29,12 +30,22 @@ class GamerManager:
         for username, info in self.gamers.items():
             print(f"{username}: {info}")
 
+def send_fight_request_to_fight_server(request_data):
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(2)
+        sock.sendto(json.dumps(request_data).encode(), FIGHT_SERVER_ADDRESS)
+        response_data, _ = sock.recvfrom(BUFFER_SIZE)
+        return json.loads(response_data.decode())
+    except Exception as e:
+        print(f"[Server] Error contacting fight server: {e}")
+        return None
+
 def handle_request(sock, data, address, manager):
     try:
         request = json.loads(data.decode())
         action = request.get("action")
         username = request.get("username")
-
         print(f"[Server] Received '{action}' request from {username}")
 
         if action == "login":
@@ -57,10 +68,6 @@ def handle_request(sock, data, address, manager):
                 response = {"status": "success", "message": "Strengths assigned"}
                 print(f"[Server] Strengths assigned for {username}")
 
-        elif action == "get_active_users":
-            active = list(manager.get_active_gamers().keys())
-            response = {"status": "success", "active_users": active}
-
         elif action == "upload_avatar":
             filename = request.get("filename")
             avatar_data = request.get("avatar_data")
@@ -69,6 +76,54 @@ def handle_request(sock, data, address, manager):
             manager.gamers[username]["avatar"] = f"{username}.jpg"
             response = {"status": "success", "message": "Avatar uploaded"}
             print(f"[Server] Avatar uploaded for {username}")
+
+        elif action == "get_active_users":
+            active = list(manager.get_active_gamers().keys())
+            response = {"status": "success", "active_users": active}
+
+        elif action == "get_fight_logs":
+            response = {"status": "success", "logs": fight_logs}
+
+        elif action == "get_active_gamer_info":
+            active = manager.get_active_gamers()
+            response = {"status": "success", "gamers": active}
+
+        elif action == "fight_request":
+            boss = request.get("boss")
+            item = request.get("fighting_item")
+            strength = request.get("fighting_strength")
+
+            if username not in manager.gamers or boss not in manager.gamers:
+                response = {"status": "fail", "message": "Invalid usernames"}
+            else:
+                requester_state = manager.gamers[username]
+                boss_state = manager.gamers[boss]
+
+                if requester_state[item] < strength:
+                    response = {"status": "fail", "message": "Not enough strength"}
+                else:
+                    fight_data = {
+                        "requester": username,
+                        "boss": boss,
+                        "fighting_item": item,
+                        "fighting_strength": strength,
+                        "requester_state": requester_state,
+                        "boss_state": boss_state
+                    }
+                    result = send_fight_request_to_fight_server(fight_data)
+                    if result:
+                        with manager.lock:
+                            manager.gamers[username].update(result["requester_update"])
+                            manager.gamers[boss].update(result["boss_update"])
+                            fight_logs.append(result["log_entry"])
+                        response = {
+                            "status": "success",
+                            "message": f"Fight processed. Winner: {result['winner']}",
+                            "updated_state": manager.gamers[username]
+                        }
+                        print(f"[Server] Fight confirmed between {username} and {boss}")
+                    else:
+                        response = {"status": "fail", "message": "Fight server error"}
 
         else:
             response = {"status": "fail", "message": "Unknown action"}
