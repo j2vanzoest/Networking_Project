@@ -1,5 +1,6 @@
 import socket
 import json
+import tkinter as tk
 
 SERVER_ADDRESS = ("127.0.0.1", 21000)
 BUFFER_SIZE = 4096
@@ -10,8 +11,25 @@ def send_request(sock, request):
     return json.loads(response_data.decode())
 
 def login(sock):
-    username = input("Enter your username: ").strip()
-    password = input("Enter your password: ").strip()
+
+    #login_root is the name of the pop-up window
+    login_root = tk.Tk()
+    #this line adds text to the top of the window as a title
+    login_root.title("Simple RPG Game")
+    login_root.geometry('500x500')
+
+    #username = input("Enter your username: ").strip()
+    #password = input("Enter your password: ").strip()
+    #tk.Label is essentially just a text box
+    tk.Label(login_root, text="Username:", font=("Helvetica")).pack(pady=5, padx=3)
+    #Entry allows for user input, assigns ti variable ('username' in this case)
+    username_entry = tk.Entry(login_root)
+    #pady=5 and padx=3 just adds pixel padding to text box, 5 pixels on y axis and 3 on x 
+    username_entry.pack(pady=5, padx=3)
+    tk.Label(login_root, text="Password:", font=("Helvetica")).pack(pady=5, padx=3)
+    password_entry= tk.Entry(login_root)
+    password_entry.pack(pady=5, padx=3)
+    
     request = {"action": "login", "username": username, "password": password}
     response = send_request(sock, request)
     if response.get("status") == "success":
