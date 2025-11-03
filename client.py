@@ -13,7 +13,7 @@ def send_request(sock, request):
     response_data, _ = sock.recvfrom(BUFFER_SIZE)
     return json.loads(response_data.decode())
 
-def login(sock):
+def login(sock, root):
     user_result = None
 
     login_root = tk.Toplevel()
@@ -197,7 +197,7 @@ def main():
     root = tk.Tk()
     root.withdraw()
 
-    username = login(sock)
+    username = login(sock, root)
     
     action_root = tk.Toplevel()
     action_root.title("Choose an action:")
