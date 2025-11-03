@@ -12,7 +12,9 @@ def process_fight(data):
     requester = data["requester"]
     boss = data["boss"]
     item = data["fighting_item"]
-    strength = data["fighting_strength"]
+    requester_strength = requester_state.get(item, 0)
+    strength = requester_strength  # Use the actual strength from the requester's state
+
     requester_state = data["requester_state"]
     boss_state = data["boss_state"]
 
