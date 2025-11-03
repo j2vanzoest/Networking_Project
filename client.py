@@ -68,8 +68,10 @@ def assign_strengths(sock, username):
 
             request = {"action": "assign_strengths", "username": username, "strengths": strengths}
             response = send_request(sock, request)
-            print(f"[Client] {response.get('message')}")
+            #print(f"[Client] {response.get('message')}")
 
+            messagebox.showinfo("", response.get("message"))
+            
             strengths_root.destroy()
 
         except ValueError:
