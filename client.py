@@ -21,7 +21,7 @@ def login(sock):
     username_entry = tk.Entry(login_root)
     username_entry.pack(pady=5, padx=3)
     tk.Label(login_root, text="Password:", font=("Helvetica")).pack(pady=5, padx=3)
-    password_entry = tk.Entry(login_root)
+    password_entry = tk.Entry(login_root, show="*")
     password_entry.pack(pady=5, padx=3)
 
     status_label = tk.Label(login_root, text="")
