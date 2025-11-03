@@ -17,7 +17,7 @@ def login(sock):
     login_root = tk.Tk()
     #this line adds text to the top of the window as a title
     login_root.title("Simple RPG Game")
-    login_root.geometry('500x500')
+    login_root.geometry('300x300')
 
     #username = input("Enter your username: ").strip()
     #password = input("Enter your password: ").strip()
@@ -140,15 +140,23 @@ def view_active_users(sock):
     
 def send_fight_request(sock, username):
 
-    #fight_root
+    fight_root = tk.Tk()
+    fight_root.title("Initiating Fight Request..."
     #boss = input("Enter the username of the gamer you want to fight: ").strip()
     #item = input("Choose item (sword/slaying_potion): ").strip()
+
+    tk.Label(fight_root, text = "Which user will you attempt to slay?:", font = ("Helvetica", 10, "underline", "bold"), fg = "darkred", bg = "white").pack(padx = 5, pady = 10)
+    fight_entry = tk.Entry(fight_root)
+    tk.Label(fight_root, text = "Choose what to fight with:", font = ("Helvetica", 10, "underline", "bold"), fg = "black", bg = "white").pack(padx = 5, pady = 10)
+    item_entry = tk.Entry(fight_root)
+
     
-    try:
-        strength = int(input("Enter strength to use (0-3): ").strip())
-    except ValueError:
-        print("[Client] Invalid strength.")
-        return
+    
+    #try:
+        #strength = int(input("Enter strength to use (0-3): ").strip())
+    #except ValueError:
+        #print("[Client] Invalid strength.")
+        #return
 
     request = {
         "action": "fight_request",
@@ -241,6 +249,6 @@ def main():
             #break
         #else:
             #print("[Client] Invalid choice.")
-
+    sock.close()
 if __name__ == "__main__":
     main()
