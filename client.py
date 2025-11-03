@@ -13,9 +13,10 @@ def send_request(sock, request):
     return json.loads(response_data.decode())
 
 def login(sock):
+    user_result = None
 
     login_root = tk.Toplevel()
-    login_root.geometry('300x350')
+    login_root.geometry('200x300')
     login_root.title("Login")
 
     tk.Label(login_root, text="Username:", font=("Helvetica")).pack(pady=5, padx=3)
@@ -29,25 +30,47 @@ def login(sock):
     status_label.pack(pady=5, padx=3)
     
     def login_attempt():
+        nonlocal user_result
         username = username_entry.get().strip()
         password = password_entry.get().strip()
-        
         request = {"action": "login", "username": username, "password": password}
         response = send_request(sock, request)
-
         if response.get("status") == "success":
-            status_label.config(text=f"Login successful. Welcome, {username}!", fg="green", bg="lightblue")  
+            status_label.config(text=f"Login successful. Welcome, {username}!", fg="green", bg="lightblue")
+            user_result = username
             login_root.destroy()
         else:
             status_label.config(text="Login failed. Try again.", fg="white", bg="red")
             
     tk.Button(login_root, text="Login", command=login_attempt).pack(pady=6, padx=2)
-    tk.Button(login_root, text="Quit", font=("Arial", 10), fg="red", 
-              activebackground="red", activeforeground="white", command=login_root.destroy).pack(pady=6, padx=2)
-    
-    login_root.mainloop()
-    
+    tk.Button(login_root, text="Quit", font=("Arial", 10), fg="red", activebackground="red", activeforeground="white",
+              command=login_root.destroy).pack(pady=6, padx=2)
+
+    login_root.grab_set()
+    login_root.wait_window()
+
+    return user_result
+
+
 def assign_strengths(sock, username):
+    strengths_root = tk.Toplevel()
+    strengths_root.configure(bg="lightgreen")
+
+    tk.Label(strengths_root, text="Assign your strengths.\n(Total must equal 10, each between 0 and 3):", 
+             justify="center", anchor="n", fg="white", relief=tk.RAISED, bg="darkblue", font=("Times", 10, 'bold')).pack(padx=10, pady=10)
+    
+    tk.Label(strengths_root, text="Sword strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify="left").pack(padx=10, pady=10)
+    sword_entry = tk.Entry(strengths_root)
+    sword_entry.pack(padx=10, pady=10)
+    tk.Label(strengths_root, text="Shield strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify="left").pack(padx=10, pady=10)
+    shield_entry = tk.Entry(strengths_root)
+    shield_entry.pack(padx=10, pady=10)
+    tk.Label(strengths_root, text="Slaying Potion strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify="left").pack(padx=10, pady=10)
+    sp_entry = tk.Entry(strengths_root)
+    sp_entry.pack(padx=10, pady=10)
+    tk.Label(strengths_root, text="Healing Potion strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify="left").pack(padx=10, pady=10)
+    hp_entry = tk.Entry(strengths_root)
+    hp_entry.pack(padx=10, pady=10)
 
     def submit_strengths():
         try:
@@ -55,52 +78,21 @@ def assign_strengths(sock, username):
             shield = int(shield_entry.get())
             slaying_potion = int(sp_entry.get())
             healing_potion = int(hp_entry.get())
-
             if any(x < 0 or x > 3 for x in [sword, shield, slaying_potion, healing_potion]) or \
                (sword + shield + slaying_potion + healing_potion != 10):
                 raise ValueError
-
-            strengths = {
-                "sword": sword,
-                "shield": shield,
-                "slaying_potion": slaying_potion,
-                "healing_potion": healing_potion
-            }
-
+            strengths = {"sword": sword, "shield": shield, "slaying_potion": slaying_potion, "healing_potion": healing_potion}
             request = {"action": "assign_strengths", "username": username, "strengths": strengths}
             response = send_request(sock, request)
-            #print(f"[Client] {response.get('message')}")
-
             messagebox.showinfo("", response.get("message"))
-            
             strengths_root.destroy()
-
         except ValueError:
             messagebox.showerror("Invalid Input", "Invalid inputs, try again!")
 
-    strengths_root = tk.Toplevel()
-    strengths_root.configure(bg = "lightgreen")
-
-    tk.Label(text="Assign your strengths (total must equal 10, each between 0 and 3):", justify="left", 
-             anchor="n", font=("Times", 10, 'bold')).pack(padx=10, pady=10)
-    
-    tk.Label(strengths_root, text="Sword strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify = "left").pack(padx=10, pady=10)
-    sword_entry = tk.Entry(strengths_root)
-    sword_entry.pack(padx=10, pady=10)
-    tk.Label(strengths_root, text="Shield strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify = "left").pack(padx=10, pady=10)
-    shield_entry = tk.Entry(strengths_root)
-    shield_entry.pack(padx=10, pady=10)
-    tk.Label(strengths_root, text="Slaying Potion strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify = "left").pack(padx=10, pady=10)
-    sp_entry = tk.Entry(strengths_root)
-    sp_entry.pack(padx=10, pady=10)
-    tk.Label(strengths_root, text="Healing Potion strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify = "left").pack(padx=10, pady=10)
-    hp_entry = tk.Entry(strengths_root)
-    hp_entry.pack(padx=10, pady=10)
-
     tk.Button(strengths_root, text="Submit", font=("Times", 8, "bold"), command=submit_strengths, bg="white", fg="black").pack(pady=10)
 
-    strengths_root.mainloop()
-    
+    strengths_root.grab_set()
+    strengths_root.wait_window()  
     
 def view_active_users(sock):
     
@@ -204,9 +196,11 @@ def main():
     root = tk.Tk()
     root.withdraw()
 
+    username = login(sock)
+    
     action_root = tk.Toplevel()
     action_root.title("Choose an action:")
-    action_root.geometry('800x800')
+    action_root.geometry('150x200')
     action_root.configure(bg="white")
     
     tk.Button(action_root, text="Assign Strengths", activebackground="darkblue", 
