@@ -1,5 +1,6 @@
 import socket
 import json
+import os
 import tkinter as tk
 from tkinter import messagebox
 
@@ -31,6 +32,9 @@ def login(sock):
     password_entry= tk.Entry(login_root)
     password_entry.pack(pady=5, padx=3)
 
+    status_label = tk.Label(login_root, text = "")
+    status_label.pack(pady=5, padx=3)
+    
     def login_attempt():
 
         #get username and password from user
@@ -143,7 +147,7 @@ def view_active_users(sock):
 def send_fight_request(sock, username):
 
     fight_root = tk.Tk()
-    fight_root.title("Initiating Fight Request..."
+    fight_root.title("Initiating Fight Request...")
     #boss = input("Enter the username of the gamer you want to fight: ").strip()
     #item = input("Choose item (sword/slaying_potion): ").strip()
 
