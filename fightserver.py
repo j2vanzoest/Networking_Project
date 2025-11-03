@@ -12,12 +12,14 @@ def process_fight(data):
     requester = data["requester"]
     boss = data["boss"]
     item = data["fighting_item"]
-    requester_strength = requester_state.get(item, 0)
-    strength = requester_strength  # Use the actual strength from the requester's state
+    #requester_strength = requester_state.get(item, 0)
+    #strength = requester_strength  # Use the actual strength from the requester's state
 
     requester_state = data["requester_state"]
     boss_state = data["boss_state"]
-
+    # Extract strength from requester's state based on item
+    strength = requester_state.get(item, 0)
+    
     result = {
         "winner": "none",
         "requester_update": {},
@@ -36,29 +38,35 @@ def process_fight(data):
         attacker_life = requester_state["lives"]
         defender_life = boss_state["lives"]
     else:
+         print(f"[FightServer] Invalid item: {item}")
         return result  # Invalid item
 
-    if attacker_strength < strength:
-        return result  # Not enough strength
+    # Validate strength internally
+
+    if attacker_strength <= 0:
+        print(f"[FightServer] {requester} tried to use {item} with insufficient strength ({attacker_strength})")
+        return result
+        
+    print(f"[FightServer] {requester} is using {item} with strength {attacker_strength}")
 
     # Apply game rules
-    if defender_strength == strength:
+    if defender_strength == attacker_strength:
         attacker_life -= 1
         defender_life -= 1
         attacker_strength -= 2
         defender_strength -= 2
         winner = "none"
-    elif defender_strength < strength:
+    elif defender_strength < attacker_strength:
         attacker_life += 1
         defender_life -= 1
-        attacker_strength -= (strength - defender_strength)
-        defender_strength -= defender_strength
+        attacker_strength -= (attacker_strength - defender_strength)
+        defender_strength -= 0
         winner = requester
     else:
         attacker_life -= 1
         defender_life += 1
-        attacker_strength -= strength
-        defender_strength -= (defender_strength - strength)
+        attacker_strength -= attacker_strength
+        defender_strength -= (defender_strength - attacker_strength)
         winner = boss
 
     # Clamp values
