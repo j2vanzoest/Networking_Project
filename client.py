@@ -15,7 +15,7 @@ def send_request(sock, request):
 def login(sock):
 
     login_root = tk.Toplevel()
-    login_root.geometry('500x800')
+    login_root.geometry('300x350')
     login_root.title("Login")
 
     tk.Label(login_root, text="Username:", font=("Helvetica")).pack(pady=5, padx=3)
@@ -79,9 +79,10 @@ def assign_strengths(sock, username):
             messagebox.showerror("Invalid Input", "Invalid inputs, try again!")
 
     strengths_root = tk.Toplevel()
+    strengths_root.configure(bg = "lightgreen")
 
     tk.Label(text="Assign your strengths (total must equal 10, each between 0 and 3):", justify="left", 
-             anchor="n", font=("Times", 14, 'bold')).pack(padx=10, pady=10)
+             anchor="n", font=("Times", 10, 'bold')).pack(padx=10, pady=10)
     
     tk.Label(strengths_root, text="Sword strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify = "left").pack(padx=10, pady=10)
     sword_entry = tk.Entry(strengths_root)
