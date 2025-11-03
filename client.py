@@ -105,7 +105,7 @@ def view_active_users(sock):
     tk.Label(users_root, text="Active Users", font=("Helvetica", 14, "bold"),
              fg="white", bg="darkgreen", width=20, relief="ridge", borderwidth=2).grid(row=0, column=0, sticky="nsew") #header
 
-    for i, username in enumerate(active_gamers.keys(), start=1):
+    for i, username in enumerate(active_gamers, start=1):
         tk.Label(users_root, text=username, font=("Helvetica", 11),
                  width=20, relief="ridge", borderwidth=2).grid(row=i, column=0, sticky="nsew") #list users
 
