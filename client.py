@@ -60,7 +60,9 @@ def login(sock):
     tk.Button(login_root, text="Login", command = login_attempt).pack(pady=6, padx=2)
     tk.Button(login_root, text = "Quit", font=("Arial", 10), fg = "red", 
               activebackground="red", activeforeground="white", command=login_root.destroy).pack(pady=6, padx=2)
-
+    
+    login_root.mainloop()
+    
 def assign_strengths(sock, username):
 
     def submit_strengths():
@@ -150,7 +152,9 @@ def send_fight_request(sock, username):
     tk.Label(fight_root, text = "Choose what to fight with:", font = ("Helvetica", 10, "underline", "bold"), fg = "black", bg = "white").pack(padx = 5, pady = 10)
     item_entry = tk.Entry(fight_root)
 
-    
+    boss = fight_entry.strip()
+    item = item_entry.strip()
+    strength = 2
     
     #try:
         #strength = int(input("Enter strength to use (0-3): ").strip())
@@ -234,7 +238,7 @@ def main():
         tk.Button(action_root, text = "Upload Avatar", activebackground="darkblue", 
                   activeforeground="white", fg = "darkblue", bg = "white", command = upload_avatar(sock, username)).pack(pady =5, padx=2)
         tk.Button(action_root, text = "View Active Users", activebackground="darkblue", 
-                  activeforeground="white", fg = "darkblue", bg = "white", command = get_active_users(sock, username)).pack(pady =5, padx=2)
+                  activeforeground="white", fg = "darkblue", bg = "white", command = view_active_users(sock, username)).pack(pady =5, padx=2)
         tk.Button(action_root, text = "Quit", activebackground="red", 
                   activeforeground="white", fg = "red", bg = "white", command = action_root.destroy).pack(pady =5, padx=2)
         
