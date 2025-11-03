@@ -183,7 +183,23 @@ def view_fight_logs(sock):
                 log["fighting_strength"], log["winner"]
             ))
     else:
-        print("[Client] Failed to retrieve logs.")
+        print("[Client] Failed to retrieve logs.") 
+
+def upload_avatar(sock, username):
+    avatar_path = input("Enter the path to your avatar image (JPG): ").strip()
+    if not os.path.isfile(avatar_path):
+        print("[Client] File not found.")
+        return
+    with open(avatar_path, "rb") as f:
+        avatar_data = list(f.read())
+    request = {
+        "action": "upload_avatar",
+        "username": username,
+        "filename": os.path.basename(avatar_path),
+        "avatar_data": avatar_data
+    }
+    response = send_request(sock, request)
+    print(f"[Client] {response.get('message')}")
 
 def view_active_gamer_info(sock):
     request = {"action": "get_active_gamer_info"}
