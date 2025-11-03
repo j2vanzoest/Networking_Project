@@ -42,9 +42,9 @@ def login(sock):
         else:
             status_label.config(text="Login failed. Try again.", fg="white", bg="red")
             
-    tk.Button(login_root, text="Login", command=login_attempt).pack(pady=6, padx=2)
+    tk.Button(login_root, text="Login", command=lambda: login_attempt).pack(pady=6, padx=2)
     tk.Button(login_root, text="Quit", font=("Arial", 10), fg="red", activebackground="red", activeforeground="white",
-              command=login_root.destroy).pack(pady=6, padx=2)
+              command=lambda: sys.exit()).pack(pady=6, padx=2)
 
     login_root.grab_set()
     login_root.wait_window()
