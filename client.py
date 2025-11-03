@@ -80,16 +80,16 @@ def assign_strengths(sock, username):
     tk.Label(text="Assign your strengths (total must equal 10, each between 0 and 3):", justify="left", 
              anchor="n", font=("Times", 14, 'bold')).pack(padx=10, pady=10)
     
-    tk.Label(strengths_root, text="Sword strength:", font=("Times", 8, "underline"), fg="white", bg="darkgreen").pack(padx=10, pady=10)
+    tk.Label(strengths_root, text="Sword strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify = "left").pack(padx=10, pady=10)
     sword_entry = tk.Entry(strengths_root)
     sword_entry.pack(padx=10, pady=10)
-    tk.Label(strengths_root, text="Shield strength:", font=("Times", 8, "underline"), fg="white", bg="darkgreen").pack(padx=10, pady=10)
+    tk.Label(strengths_root, text="Shield strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify = "left").pack(padx=10, pady=10)
     shield_entry = tk.Entry(strengths_root)
     shield_entry.pack(padx=10, pady=10)
-    tk.Label(strengths_root, text="Slaying Potion strength:", font=("Times", 8, "underline"), fg="white", bg="darkgreen").pack(padx=10, pady=10)
+    tk.Label(strengths_root, text="Slaying Potion strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify = "left").pack(padx=10, pady=10)
     sp_entry = tk.Entry(strengths_root)
     sp_entry.pack(padx=10, pady=10)
-    tk.Label(strengths_root, text="Healing Potion strength:", font=("Times", 8, "underline"), fg="white", bg="darkgreen").pack(padx=10, pady=10)
+    tk.Label(strengths_root, text="Healing Potion strength:", font=("Times", 8, "underline", "bold"), fg="white", bg="darkgreen", justify = "left").pack(padx=10, pady=10)
     hp_entry = tk.Entry(strengths_root)
     hp_entry.pack(padx=10, pady=10)
 
@@ -198,9 +198,7 @@ def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     root = tk.Tk()
-    root.configure(bg="white")
-    
-    username = "A"
+    root.withdraw()
 
     action_root = tk.Toplevel()
     action_root.title("Choose an action:")
