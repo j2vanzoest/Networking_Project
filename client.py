@@ -13,7 +13,7 @@ def send_request(sock, request):
     response_data, _ = sock.recvfrom(BUFFER_SIZE)
     return json.loads(response_data.decode())
 
-def login(sock, root):
+def login(sock):
     user_result = None
 
     login_root = tk.Toplevel()
@@ -45,7 +45,7 @@ def login(sock, root):
             
     tk.Button(login_root, text="Login", command=lambda: login_attempt).pack(pady=6, padx=2)
     tk.Button(login_root, text="Quit", font=("Arial", 10), fg="red", activebackground="red", activeforeground="white",
-              command=lambda: root.destroy()).pack(pady=6, padx=2)
+              command=lambda: os._exit(0)).pack(pady=6, padx=2)
 
     login_root.grab_set()
     login_root.wait_window()
@@ -197,7 +197,7 @@ def main():
     root = tk.Tk()
     root.withdraw()
 
-    username = login(sock, root)
+    username = login(sock)
     
     action_root = tk.Toplevel()
     action_root.title("Choose an action:")
