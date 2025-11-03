@@ -15,16 +15,16 @@ def send_request(sock, request):
 def login(sock):
 
     #login_root is the name of the pop-up window
-    login_root = tk.Tk()
+    login_root = tk.Toplevel()
     #this line adds text to the top of the window as a title
-    login_root.title("Simple RPG Game")
+    login_root.title("Login")
     login_root.geometry('300x300')
 
     #username = input("Enter your username: ").strip()
     #password = input("Enter your password: ").strip()
     #tk.Label is essentially just a text box
     tk.Label(login_root, text="Username:", font=("Helvetica")).pack(pady=5, padx=3)
-    #Entry allows for user input, assigns ti variable ('username' in this case)
+    #Entry allows for user input, assigns to variable ('username' in this case)
     username_entry = tk.Entry(login_root)
     #pady=5 and padx=3 just adds pixel padding to text box, 5 pixels on y axis and 3 on x 
     username_entry.pack(pady=5, padx=3)
@@ -99,7 +99,7 @@ def assign_strengths(sock, username):
             messagebox.showerror("Invalid Input", "Invalid inputs, try again!")
 
     #print("Assign your strengths (total must be 10, max 3 per item):")
-    strengths_root = tk.Tk()
+    strengths_root = tk.Toplevel()
 
     tk.Label(text="Assign your strengths (total must equal 10, each between 0 and 3):", justify="left", 
              anchor="n", font=("Times", 14, 'bold'))
@@ -123,30 +123,27 @@ def assign_strengths(sock, username):
     
     
 def view_active_users(sock):
+    
     request = {"action": "get_active_users"}
     response = send_request(sock, request)
-    #print("[Client] Active users:", response.get("active_users"))
-
     active_gamers = response.get("active_users")
 
-    active_root = tk.Tk()
-    active_root.title("Active Gamers")
+    # Create a new Tkinter window
+    users_root = tk.Toplevel()
+    users_root.title("Active Users")
 
-    headers = ["Active User:", "Sword", "Shield", "Slaying-Potion", "Healing-Potion", "Lives"]
+    # Header label
+    tk.Label(users_root, text="Active Users", font=("Helvetica", 14, "bold"),
+             fg="white", bg="darkgreen", width=20, relief="ridge", borderwidth=2).grid(row=0, column=0, sticky="nsew")
 
-    for row, (username, stats) in enumerate(active_gamers.items(), start=1):
-        tk.Label(active_root, text=username, borderwidth=2, relief="ridge", width=15).grid(row=row, column=0, sticky="nsew")
-        tk.Label(active_root, text=stats["sword"], borderwidth=2, relief="ridge", width=15).grid(row=row, column=1, sticky="nsew")
-        tk.Label(active_root, text=stats["shield"], borderwidth=2, relief="ridge", width=15).grid(row=row, column=2, sticky="nsew")
-        tk.Label(active_root, text=stats["slaying_potion"], borderwidth=2, relief="ridge", width=15).grid(row=row, column=3, sticky="nsew")
-        tk.Label(active_root, text=stats["healing_potion"], borderwidth=2, relief="ridge", width=15).grid(row=row, column=4, sticky="nsew")
-        tk.Label(active_root, text=stats["lives"], borderwidth=2, relief="ridge", width=15).grid(row=row, column=5, sticky="nsew")
-
-    active_root.mainloop()
+    # Loop through the dict and display only usernames
+    for i, username in enumerate(active_gamers.keys(), start=1):
+        tk.Label(users_root, text=username, font=("Helvetica", 11),
+                 width=20, relief="ridge", borderwidth=2).grid(row=i, column=0, sticky="nsew")
     
 def send_fight_request(sock, username):
 
-    fight_root = tk.Tk()
+    fight_root = tk.Toplevel()
     fight_root.title("Initiating Fight Request...")
     #boss = input("Enter the username of the gamer you want to fight: ").strip()
     #item = input("Choose item (sword/slaying_potion): ").strip()
@@ -158,7 +155,6 @@ def send_fight_request(sock, username):
 
     boss = fight_entry.strip()
     item = item_entry.strip()
-    strength = 2
     
     #try:
         #strength = int(input("Enter strength to use (0-3): ").strip())
@@ -210,69 +206,53 @@ def upload_avatar(sock, username):
     print(f"[Client] {response.get('message')}")
 
 def view_active_gamer_info(sock):
-    request = {"action": "get_active_gamer_info"}
+    
+    request = {"action": "get_active_gamers"}
     response = send_request(sock, request)
-    if response.get("status") == "success":
-        print("\n[Client] Active Gamers Info:")
-        print("{:<10} {:<6} {:<6} {:<15} {:<15} {:<6}".format(
-            "Username", "Sword", "Shield", "Slaying Potion", "Healing Potion", "Lives"
-        ))
-        for user, info in response.get("gamers", {}).items():
-            print("{:<10} {:<6} {:<6} {:<15} {:<15} {:<6}".format(
-                user, info["sword"], info["shield"],
-                info["slaying_potion"], info["healing_potion"], info["lives"]
-            ))
-    else:
-        print("[Client] Failed to retrieve gamer info.")
+    active_gamers = response.get("active_users")
+
+    active_root = tk.Toplevel()
+    active_root.title("Active Gamers")
+
+    headers = ["Active User:", "Sword", "Shield", "Slaying-Potion", "Healing-Potion", "Lives"]
+
+    for row, (username, stats) in enumerate(active_gamers.items(), start=1):
+        tk.Label(active_root, text=username, borderwidth=2, relief="ridge", width=15).grid(row=row, column=0, sticky="nsew")
+        tk.Label(active_root, text=stats["sword"], borderwidth=2, relief="ridge", width=15).grid(row=row, column=1, sticky="nsew")
+        tk.Label(active_root, text=stats["shield"], borderwidth=2, relief="ridge", width=15).grid(row=row, column=2, sticky="nsew")
+        tk.Label(active_root, text=stats["slaying_potion"], borderwidth=2, relief="ridge", width=15).grid(row=row, column=3, sticky="nsew")
+        tk.Label(active_root, text=stats["healing_potion"], borderwidth=2, relief="ridge", width=15).grid(row=row, column=4, sticky="nsew")
+        tk.Label(active_root, text=stats["lives"], borderwidth=2, relief="ridge", width=15).grid(row=row, column=5, sticky="nsew")
+
+    active_root.mainloop()
+    
 
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    root = tk.Tk()
+    root.withdraw()
+    
     username = login(sock)
     if not username:
         return
 
-    while True:
-
-        action_root = tk.Tk()
-        action_root.title("Choose an action:", fg = 'darkblue', bg = 'white')
+    action_root = tk.Toplevel()
+    action_root.title("Choose an action:", fg = 'darkblue', bg = 'white')
+    action_root.configure(bg="white")
         
-        #first parameter ID's root button belongs to, 'active' params affect button when clicked, fg/bg are base colors for text/background respectively
-        tk.Button(action_root, text = "Assign Strengths", activebackground="darkblue", 
-                  activeforeground="white", fg = "darkblue", bg = "white", command = assign_strengths(sock, username)).pack(pady =5, padx=2)
-        tk.Button(action_root, text = "Upload Avatar", activebackground="darkblue", 
-                  activeforeground="white", fg = "darkblue", bg = "white", command = upload_avatar(sock, username)).pack(pady =5, padx=2)
-        tk.Button(action_root, text = "View Active Users", activebackground="darkblue", 
-                  activeforeground="white", fg = "darkblue", bg = "white", command = view_active_users(sock, username)).pack(pady =5, padx=2)
-        tk.Button(action_root, text = "Quit", activebackground="red", 
-                  activeforeground="white", fg = "red", bg = "white", command = action_root.destroy).pack(pady =5, padx=2)
+    #first parameter ID's root button belongs to, 'active' params affect button when clicked, fg/bg are base colors for text/background respectively
+    tk.Button(action_root, text = "Assign Strengths", activebackground="darkblue", 
+                activeforeground="white", fg = "darkblue", bg = "white", command = assign_strengths(sock, username)).pack(pady =5, padx=2)
+    tk.Button(action_root, text = "Upload Avatar", activebackground="darkblue", 
+                activeforeground="white", fg = "darkblue", bg = "white", command = upload_avatar(sock, username)).pack(pady =5, padx=2)
+    tk.Button(action_root, text = "View Active Users", activebackground="darkblue", 
+                activeforeground="white", fg = "darkblue", bg = "white", command = view_active_users(sock, username)).pack(pady =5, padx=2)
+    tk.Button(action_root, text = "Quit", activebackground="red", 
+                activeforeground="white", fg = "red", bg = "white", command = action_root.destroy).pack(pady =5, padx=2)
         
-        action_root.destroy()
-        
-        
-        #print("\nMenu:")
-        #print("1. Assign strengths")
-        #print("2. View active users")
-        #print("3. Fight another gamer")
-        #print("4. View fight logs")
-        #print("5. View full info of active gamers")
-        #print("6. Quit")
-        #choice = input("Enter your choice: ").strip()
-
-        #if choice == "1":
-            #assign_strengths(sock, username)
-        #elif choice == "2":
-            #view_active_users(sock)
-        #elif choice == "3":
-            #send_fight_request(sock, username)
-        #elif choice == "4":
-            #view_fight_logs(sock)
-        #elif choice == "5":
-            #view_active_gamer_info(sock)
-        #elif choice == "6":
-            #print("[Client] Goodbye!")
-            #break
-        #else:
-            #print("[Client] Invalid choice.")
+    action_root.destroy()
     sock.close()
+    
 if __name__ == "__main__":
     main()
