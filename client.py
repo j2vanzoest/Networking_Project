@@ -15,6 +15,7 @@ def send_request(sock, request):
 def login(sock):
 
     login_root = tk.Toplevel()
+    login_root.geometry('500x800')
     login_root.title("Login")
 
     tk.Label(login_root, text="Username:", font=("Helvetica")).pack(pady=5, padx=3)
@@ -204,6 +205,7 @@ def main():
 
     action_root = tk.Toplevel()
     action_root.title("Choose an action:")
+    action_root.geometry('800x800')
     action_root.configure(bg="white")
     
     tk.Button(action_root, text="Assign Strengths", activebackground="darkblue", 
