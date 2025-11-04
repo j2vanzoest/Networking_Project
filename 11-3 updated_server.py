@@ -50,8 +50,6 @@ class GamerManager:
                                            info["slaying_potion"], info["healing_potion"], info["avatar"]))
         tree.pack(padx=10, pady=10)
 
-        #Run the window in a non-blocking thread
-        threading.Thread(target=root.mainloop).start()
 
         ##Old print-based display, kept for reference
         ##print("\n[Server] Current Gamer States:")
