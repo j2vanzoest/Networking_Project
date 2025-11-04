@@ -50,7 +50,6 @@ class GamerManager:
                                            info["slaying_potion"], info["healing_potion"], info["avatar"]))
         tree.pack(padx=10, pady=10)
 
-
         ##Old print-based display, kept for reference
         ##print("\n[Server] Current Gamer States:")
         ##for username, info in self.gamers.items():
@@ -80,10 +79,12 @@ def handle_request(sock, data, address, manager):
         if action == "login":
             password = request.get("password")
             gamer = manager.gamers.get(username)
-            if gamer and gamer["password"] == password:
+            if gamer and gamer["password"] == password and gamer["lives"] > 0:
                 response = {"status": "success", "gamer": gamer}
                 print(f"[Server] {username} authenticated.")
-            else:
+            elif gamer and gamer["password"] == password and gamer["lives"] <= 0:
+                response = {"status": "inactive", "message": "User out of lives!"}
+            else:    
                 response = {"status": "fail", "message": "Invalid credentials"}
 
         #Assign strengths to player attributes
