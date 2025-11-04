@@ -40,6 +40,8 @@ def login(sock):
             status_label.config(text=f"Login successful. Welcome, {username}!", fg="green", bg="lightblue") #success feedback
             user_result = username #store username
             login_root.destroy() #close login
+        elif response.get("status") == "inactive":
+            status_label.config(text="User out of lives!", fg="white", bg="red") #failure feedback
         else:
             status_label.config(text="Login failed. Try again.", fg="white", bg="red") #failure feedback
             
