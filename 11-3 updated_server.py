@@ -109,6 +109,16 @@ def handle_request(sock, data, address, manager):
             response = {"status": "success", "message": "Avatar uploaded"}
             print(f"[Server] Avatar uploaded for {username}")
 
+        #Handle downloading avatars from other users
+        elif action == "get_avatar":
+            target_user = request.get("username")
+            if target_user in manager.gamers and manager.gamers[target_user]["avatar"]:
+                avatar_bytes = bytes(manager.gamers[target_user]["avatar"])
+                avatar_encoded = base64.b64encode(avatar_bytes).decode()
+                response = {"status": "success", "avatar_data": avatar_encoded}
+            else:
+                response = {"status": "fail", "message": "Avatar not found or user invalid."}
+
         #Return all active usernames
         elif action == "get_active_users":
             active = list(manager.get_active_gamers().keys())
