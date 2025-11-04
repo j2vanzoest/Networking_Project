@@ -14,10 +14,10 @@ os.makedirs(AVATAR_FOLDER, exist_ok=True)
 
 fight_logs = []
 
-#GamerManager class manages all gamer data and synchronization between threads
+#GamerManager class manages all the gamer data and synchronization between threads
 class GamerManager:
     def __init__(self):
-        #Initialize gamer states with default values
+        #Initialize all gamer states with default values
         self.gamers = {
             "A": {"password": "A", "lives": 2, "sword": -1, "shield": -1, "slaying_potion": -1, "healing_potion": -1, "avatar": None},
             "B": {"password": "B", "lives": 2, "sword": -1, "shield": -1, "slaying_potion": -1, "healing_potion": -1, "avatar": None},
@@ -26,13 +26,13 @@ class GamerManager:
         }
         self.lock = threading.Lock()
 
-    #Return only active gamers (alive and armed)
+    #Return only active gamers (any alive and armed/with stats)
     def get_active_gamers(self):
         return {u: g for u, g in self.gamers.items() if g["lives"] > 0 and g["sword"] != -1}
 
     #Display gamer data in a popup table window
     def display_gamers(self):
-        #Create a hidden root window
+        #Creates a hidden root window
         root = tk.Tk()
         root.title("Current Gamer States")
 
@@ -87,7 +87,7 @@ def handle_request(sock, data, address, manager):
             else:    
                 response = {"status": "fail", "message": "Invalid credentials"}
 
-        #Assign strengths to player attributes
+        #Assign strengths to a players attributes
         elif action == "assign_strengths":
             strengths = request.get("strengths")
             total = sum(strengths.values())
@@ -99,7 +99,7 @@ def handle_request(sock, data, address, manager):
                 response = {"status": "success", "message": "Strengths assigned"}
                 print(f"[Server] Strengths assigned for {username}")
 
-        #Handle avatar uploads
+        #Handle any avatar uploads
         elif action == "upload_avatar":
             filename = request.get("filename")
             avatar_data = request.get("avatar_data")
@@ -109,7 +109,7 @@ def handle_request(sock, data, address, manager):
             response = {"status": "success", "message": "Avatar uploaded"}
             print(f"[Server] Avatar uploaded for {username}")
 
-        #Return active usernames
+        #Return all active usernames
         elif action == "get_active_users":
             active = list(manager.get_active_gamers().keys())
             response = {"status": "success", "active_users": active}
@@ -134,7 +134,7 @@ def handle_request(sock, data, address, manager):
             else:
                 requester_state = manager.gamers[username] 
                 
-                 # Game-over check
+                 # Game-over check; Double checks any that died cannot play 
                 if requester_state["lives"] <= 0:
                      response = {"status": "fail", "message": "You cannot fight. Game over!"}
                      sock.sendto(json.dumps(response).encode(), address)
@@ -174,7 +174,7 @@ def handle_request(sock, data, address, manager):
         else:
             response = {"status": "fail", "message": "Unknown action"}
 
-        #Send response back to client
+        #Sends response back to client
         sock.sendto(json.dumps(response).encode(), address)
 
         #Display gamer states in popup window
