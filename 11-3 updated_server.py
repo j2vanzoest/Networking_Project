@@ -132,7 +132,14 @@ def handle_request(sock, data, address, manager):
             if username not in manager.gamers or boss not in manager.gamers:
                 response = {"status": "fail", "message": "Invalid usernames"}
             else:
-                requester_state = manager.gamers[username]
+                requester_state = manager.gamers[username] 
+                
+                 # Game-over check
+                if requester_state["lives"] <= 0:
+                     response = {"status": "fail", "message": "You cannot fight. Game over!"}
+                     sock.sendto(json.dumps(response).encode(), address)
+                     return
+
                 boss_state = manager.gamers[boss]
 
                 #Ensure player has enough strength for the requested item
