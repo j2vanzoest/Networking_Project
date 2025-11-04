@@ -2,8 +2,9 @@ import socket
 import json
 import os
 import sys
+import base64
 import tkinter as tk
-from tkinter import messagebox, filedialog #file dialog for GUI avatar selection
+from tkinter import messagebox, filedialog, simpledialog #file dialog for GUI avatar selection
 
 SERVER_ADDRESS = ("127.0.0.1", 21000) #server ip/port
 BUFFER_SIZE = 4096 #udp buffer size
@@ -236,6 +237,26 @@ def upload_avatar(sock, username):
     response = send_request(sock, request)
     messagebox.showinfo("Upload Avatar", response.get("message")) #feedback
 
+def download_avatar(sock):
+    #Ask which user's avatar to download
+    target_user = simpledialog.askstring("Download Avatar", "Enter username to download avatar:")
+    if not target_user:
+        return
+
+    request = {"action": "get_avatar", "username": target_user}
+    response = send_request(sock, request)
+
+    if response.get("status") == "success":
+        avatar_data = base64.b64decode(response["avatar_data"])
+        save_path = filedialog.asksaveasfilename(defaultextension=".jpg", filetypes=[("JPEG files", "*.jpg")])
+        if not save_path:
+            return
+        with open(save_path, "wb") as f:
+            f.write(avatar_data)
+        messagebox.showinfo("Download Avatar", f"Avatar saved as {save_path}")
+    else:
+        messagebox.showerror("Error", response.get("message", "Failed to download avatar"))
+
 def view_active_gamer_info(sock):
     request = {"action": "get_active_gamers"} #request
     response = send_request(sock, request)
@@ -273,6 +294,8 @@ def main():
               activeforeground="white", fg="darkblue", bg="white", command=lambda: assign_strengths(sock, username)).pack(pady=5, padx=2)
     tk.Button(action_root, text="Upload Avatar", activebackground="darkblue", 
               activeforeground="white", fg="darkblue", bg="white", command=lambda: upload_avatar(sock, username)).pack(pady=5, padx=2)
+    tk.Button(action_root, text="Download Avatar", activebackground="darkblue",
+              activeforeground="white", fg="darkblue", bg="white", command=lambda: download_avatar(sock)).pack(pady=5, padx=2)
     tk.Button(action_root, text="View Active Users", activebackground="darkblue", 
               activeforeground="white", fg="darkblue", bg="white", command=lambda: view_active_users(sock)).pack(pady=5, padx=2)
     tk.Button(action_root, text="Send Fight Request", activebackground="darkblue", 
