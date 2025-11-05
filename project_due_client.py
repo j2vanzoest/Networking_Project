@@ -265,6 +265,14 @@ def send_fight_request(sock, username):
         #display fight result in popup
         messagebox.showinfo("Fight Result", response.get("message"))
 
+        # Ask if user wants to send another fight request
+        again = messagebox.askyesno("New Fight Request", "Do you want to send another fight request?")
+        if again:
+            send_fight_request(sock, username)  # Open fight request window again
+        else:
+           messagebox.showinfo("Exit", "Returning to main menu.")
+           fight_root.destroy()  # Close fight window
+    
         #if fight successful, show updated stats
         if "updated_state" in response:
             updated_state = response["updated_state"]
