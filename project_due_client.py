@@ -77,13 +77,6 @@ def login(sock):
             #show state, mapping -1 to 'unassigned'
             show_gamer_state(gamer)
 
-            #If sword is -1 (first-time play) prompt to assign strengths
-            if gamer.get("sword", -1) == -1:
-                assign_now = messagebox.askyesno("Assign Strengths", "You are given 10 strengths. Assign now?")
-                if assign_now:
-                    #call existing assign_strengths UI which will send to server
-                    assign_strengths(sock, username)
-
             #Ask to upload avatar by filename (step 3)
             upload_now = messagebox.askyesno("Upload Avatar", "Would you like to upload an avatar file now?")
             if upload_now:
@@ -100,6 +93,13 @@ def login(sock):
                             upload_avatar_from_path(sock, username, cwd_path)
                         else:
                             messagebox.showerror("File Not Found", f"File '{fname}' not found in current directory.")
+
+            #If sword is -1 (first-time play) prompt to assign strengths (step 4)
+            if gamer.get("sword", -1) == -1:
+                assign_now = messagebox.askyesno("Assign Strengths", "You are given 10 strengths. Assign now?")
+                if assign_now:
+                    #call existing assign_strengths UI which will send to server
+                    assign_strengths(sock, username)
 
             #Ask whether user wants to view active users now (step 5)
             view_active = messagebox.askyesno("View Active Users", "Would you like to see active users now?")
