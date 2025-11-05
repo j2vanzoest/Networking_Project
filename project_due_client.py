@@ -221,12 +221,12 @@ def send_fight_request(sock, username):
     fight_root.configure(bg="lightyellow")
 
     #label for opponent entry
-    tk.Label(fight_root, text="Which user will you attempt to slay?:", font=("Helvetica", 10, "underline", "bold"), fg="darkred", bg="yellow").pack(pady=10)
+    tk.Label(fight_root, text="Which user will you attempt to slay?:", font=("Helvetica", 10, "underline", "bold"), fg="darkred", bg="lightyellow").pack(pady=10)
     fight_entry = tk.Entry(fight_root) #opponent username entry
     fight_entry.pack(padx=10, pady=10)
 
     #label for dropdown
-    tk.Label(fight_root, text="Choose what to fight with:", font=("Helvetica", 10, "underline", "bold"), fg="black", bg="yellow").pack(pady=10)
+    tk.Label(fight_root, text="Choose what to fight with:", font=("Helvetica", 10, "underline", "bold"), fg="black", bg="lightyellow").pack(pady=10)
 
     #dropdown for selecting item
     item_var = tk.StringVar(value="sword") #default value
@@ -235,7 +235,7 @@ def send_fight_request(sock, username):
     item_dropdown.pack(padx=10, pady=10)
 
     #label and entry for fighting strength
-    tk.Label(fight_root, text="Enter fighting strength (number):", font=("Helvetica", 10, "underline", "bold"), fg="black", bg="white").pack(padx=5, pady=10)
+    tk.Label(fight_root, text="Enter fighting strength (number):", font=("Helvetica", 10, "underline", "bold"), fg="black", bg="lightyellow").pack(padx=5, pady=10)
     strength_entry = tk.Entry(fight_root)
     strength_entry.pack(padx=10, pady=10)
 
