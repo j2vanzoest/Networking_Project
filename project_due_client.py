@@ -78,6 +78,11 @@ def login(sock):
         #Successful login & active
         if response.get("status") == "success":
             gamer = response.get("gamer", {})
+
+            user_result = username  #COMMENT: store username before closing window
+
+            login_root.destroy()  #COMMENT: Close login popup immediately
+
             #show state, mapping -1 to 'unassigned'
             show_gamer_state(gamer)
 
