@@ -75,6 +75,7 @@ def handle_request(sock, data, address, manager):
         action = request.get("action")  #Determine requested action
         username = request.get("username")
         print(f"[Server] Received '{action}' request from {username}")
+    print(f"[Server] Processing action: {action}")
 
         #Login logic
         if action == "login":
@@ -84,8 +85,10 @@ def handle_request(sock, data, address, manager):
                 response = {"status": "success", "gamer": gamer}
                 print(f"[Server] {username} authenticated.")
             elif gamer and gamer["password"] == password and gamer["lives"] <= 0:
+        print(f"[Server] User {username} inactive (game over)")
                 response = {"status": "inactive", "message": "User out of lives!"}
             else:    
+        print(f"[Server] Rejected login for {username}")
                 response = {"status": "fail", "message": "Invalid credentials"}
 
         #Assign strengths to a players attributes
@@ -94,7 +97,9 @@ def handle_request(sock, data, address, manager):
             total = sum(strengths.values())
             if total != 10 or any(v > 3 or v < 0 for v in strengths.values()):
                 response = {"status": "fail", "message": "Invalid strength assignment"}
+        print(f"[Server] Strength assignment failed for {username}: {strengths}")
             else:
+        print(f"[Server] Rejected login for {username}")
                 with manager.lock:
                     manager.gamers[username].update(strengths)
                 response = {"status": "success", "message": "Strengths assigned"}
@@ -127,21 +132,29 @@ def handle_request(sock, data, address, manager):
                 avatar_encoded = base64.b64encode(avatar_bytes).decode()
                 response = {"status": "success", "avatar_data": avatar_encoded}
             else:
+        print(f"[Server] Rejected login for {username}")
                 response = {"status": "fail", "message": "Avatar not found or user invalid."}
+        print(f"[Server] Avatar retrieval failed for target user: {target_user}")
 
         #Return all active usernames
         elif action == "get_active_users":
             active = list(manager.get_active_gamers().keys())
             response = {"status": "success", "active_users": active}
+        if not active:
+            print(f"[Server] Active user list is empty")
+        else:
+            print(f"[Server] Sent active user list to {username}")
 
         #Return all fight logs
         elif action == "get_fight_logs":
             response = {"status": "success", "logs": fight_logs}
+        print(f"[Server] Sent fight logs to {username}")
 
         #Return detailed info about all active gamers
         elif action == "get_active_gamer_info":
             active = manager.get_active_gamers()
             response = {"status": "success", "gamers": active}
+        print(f"[Server] Sent active gamer info to {username}")
 
         #Handle viewing user stats
         elif action == "get_stats":
@@ -152,6 +165,7 @@ def handle_request(sock, data, address, manager):
                 response = {"status": "success", "gamer": gamer}
                 print(f"[Server] Sent stats for {username}")
             else:
+        print(f"[Server] Rejected login for {username}")
                 response = {"status": "fail", "message": "User not found"}     
 
         #Handle fight requests between two gamers
@@ -162,7 +176,9 @@ def handle_request(sock, data, address, manager):
 
             if username not in manager.gamers or boss not in manager.gamers:
                 response = {"status": "fail", "message": "Invalid usernames"}
+        print(f"[Server] Fight request rejected: invalid usernames {username}, {boss}")
             else:
+        print(f"[Server] Rejected login for {username}")
                 requester_state = manager.gamers[username] 
                 
                  # Game-over check; Double checks any that died cannot play 
@@ -176,7 +192,9 @@ def handle_request(sock, data, address, manager):
                 #Ensure player has enough strength for the requested item
                 if requester_state[item] < strength:
                     response = {"status": "fail", "message": "Not enough strength"}
+        print(f"[Server] Fight request rejected for {username}: insufficient strength for {item}")
                 else:
+        print(f"[Server] Rejected login for {username}")
                     #Prepare data for fight server
                     fight_data = {
                         "requester": username,
@@ -198,13 +216,17 @@ def handle_request(sock, data, address, manager):
                             "updated_state": manager.gamers[username]
                         }
                         print(f"[Server] Fight confirmed between {username} and {boss}")
+        print(f"[Server] Sent updated state to {username}")
                     else:
+        print(f"[Server] Rejected login for {username}")
                         response = {"status": "fail", "message": "Fight server error"}
                     
 
         #Unknown action fallback
         else:
+        print(f"[Server] Rejected login for {username}")
             response = {"status": "fail", "message": "Unknown action"}
+        print(f"[Server] Unknown action received: {action}")
 
         #Sends response back to client
         sock.sendto(json.dumps(response).encode(), address)
@@ -221,6 +243,7 @@ def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(("127.0.0.1", SERVER_PORT))
     print(f"[Server] RPG Game Server running on port {SERVER_PORT}")
+    print("[Server] Waiting for client requests...")
 
     try:
         while True:
@@ -228,6 +251,7 @@ def main():
             threading.Thread(target=handle_request, args=(sock, data, address, manager)).start()
     except KeyboardInterrupt:
         print("\n[Server] Shutting down...")
+    print("[Server] Closing socket and cleaning up resources")
     finally:
         sock.close()
 
