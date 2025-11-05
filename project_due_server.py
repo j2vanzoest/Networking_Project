@@ -131,19 +131,20 @@ def handle_request(sock, data, address, manager):
 
         #Handle downloading avatars from other users
         elif action == "get_avatar":
-            target_user = request.get("username")
-            avatar_path = manager.gamers.get(target_user, {}).get("avatar")
-            user_folder = os.path.join(AVATAR_FOLDER, f"{target_user}'s Avatar")
-            full_path = os.path.join(user_folder, avatar_path) if avatar_path else None
+            target_user = request.get("username")  #username of avatar to fetch
+            user_folder = os.path.join(AVATAR_FOLDER, f"{target_user}'s Avatar")  #folder for target user
+            avatar_path = os.path.join(user_folder, f"{target_user}.jpg")  #expected avatar path
 
-            if avatar_path and os.path.exists(full_path):
-                with open(full_path, "rb") as f:
+            #Check if file exists and return encoded data
+            if os.path.exists(avatar_path):
+                with open(avatar_path, "rb") as f:
                     avatar_bytes = f.read()
                 avatar_encoded = base64.b64encode(avatar_bytes).decode()
                 response = {"status": "success", "avatar_data": avatar_encoded}
+                print(f"[Server] Sent avatar for {target_user}")
             else:
-                response = {"status": "fail", "message": "Avatar not found or user invalid."}
-                print(f"[Server] Avatar retrieval failed for target user: {target_user}")
+                response = {"status": "fail", "message": f"Avatar not found for {target_user}"}
+                print(f"[Server] Avatar not found for {target_user}")
 
         #Return all active usernames
         elif action == "get_active_users":
