@@ -140,10 +140,10 @@ def handle_request(sock, data, address, manager):
         elif action == "get_active_users":
             active = list(manager.get_active_gamers().keys())
             response = {"status": "success", "active_users": active}
-        if not active:
-            print(f"[Server] Active user list is empty")
-        else:
-            print(f"[Server] Sent active user list to {username}")
+            if not active:
+                print(f"[Server] Active user list is empty")
+            else:
+                print(f"[Server] Sent active user list to {username}")
 
         #Return all fight logs
         elif action == "get_fight_logs":
@@ -224,9 +224,9 @@ def handle_request(sock, data, address, manager):
 
         #Unknown action fallback
         else:
-        print(f"[Server] Rejected login for {username}")
+            print(f"[Server] Rejected login for {username}")
             response = {"status": "fail", "message": "Unknown action"}
-        print(f"[Server] Unknown action received: {action}")
+            print(f"[Server] Unknown action received: {action}")
 
         #Sends response back to client
         sock.sendto(json.dumps(response).encode(), address)
