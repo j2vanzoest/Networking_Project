@@ -8,6 +8,10 @@ from tkinter import messagebox, filedialog, simpledialog #file dialog for GUI av
 SERVER_ADDRESS = ("127.0.0.1", 21000) #server ip/port
 BUFFER_SIZE = 16384 #udp buffer size
 
+
+current_stats_window = None  #tracks active stats window
+
+
 def send_request(sock, request):
     sock.sendto(json.dumps(request).encode(), SERVER_ADDRESS) #send json request
     response_data, _ = sock.recvfrom(BUFFER_SIZE) #receive response
@@ -210,12 +214,12 @@ def send_fight_request(sock, username):
     fight_root.configure(bg="lightyellow")
 
     #label for opponent entry
-    tk.Label(fight_root, text="Which user will you attempt to slay?:", font=("Helvetica", 10, "underline", "bold"), fg="darkred", bg="white").pack(pady=10)
+    tk.Label(fight_root, text="Which user will you attempt to slay?:", font=("Helvetica", 10, "underline", "bold"), fg="darkred", bg="yellow").pack(pady=10)
     fight_entry = tk.Entry(fight_root) #opponent username entry
     fight_entry.pack(padx=10, pady=10)
 
     #label for dropdown
-    tk.Label(fight_root, text="Choose what to fight with:", font=("Helvetica", 10, "underline", "bold"), fg="black", bg="white").pack(pady=10)
+    tk.Label(fight_root, text="Choose what to fight with:", font=("Helvetica", 10, "underline", "bold"), fg="black", bg="yellow").pack(pady=10)
 
     #dropdown for selecting item
     item_var = tk.StringVar(value="sword") #default value
@@ -230,48 +234,56 @@ def send_fight_request(sock, username):
 
     #function to submit the request
     def submit_fight():
-        boss = fight_entry.get().strip()
-        selected_item = item_var.get()
-        fighting_item = "sword" if selected_item == "sword" else "slaying_potion" #convert dropdown text to key
+        global current_stats_window
+
+        boss = fight_entry.get().strip()                           #get opponent username
+        selected_item = item_var.get()                             #get dropdown selection
+        fighting_item = "sword" if selected_item == "sword" else "slaying_potion"  #convert dropdown text
+
+        #validate input for strength value
         try:
-            fighting_strength = int(strength_entry.get()) #parse strength
+            fighting_strength = int(strength_entry.get())
         except ValueError:
-            messagebox.showerror("Invalid Input", "Please enter a valid number for strength.") #input error
+            messagebox.showerror("Invalid Input", "Please enter a valid number for strength.")
             return
 
+        #validate opponent entry
         if not boss:
-            messagebox.showerror("Invalid Input", "Please enter a valid opponent username.") #missing opponent
+            messagebox.showerror("Invalid Input", "Please enter a valid opponent username.")
             return
 
-        #create and send request to server
-        request = {
-            "action": "fight_request",
-            "username": username,
-            "boss": boss,
-            "fighting_item": fighting_item,
-            "fighting_strength": fighting_strength
-        }
-        response = send_request(sock, request) #send and receive
-        messagebox.showinfo("Fight Result", response.get("message")) #feedback popup
+        #create and send fight request to server
+        request = {"action": "fight_request", "username": username,
+               "boss": boss, "fighting_item": fighting_item,
+               "fighting_strength": fighting_strength}
+        response = send_request(sock, request)
 
-        #if fight success, show updated state window
+        #display fight result in popup
+        messagebox.showinfo("Fight Result", response.get("message"))
+
+        #if fight successful, show updated stats
         if "updated_state" in response:
             updated_state = response["updated_state"]
 
-            #create popup for stats
-            stats_root = tk.Toplevel()
-            stats_root.title("Updated Stats")
+            #close old stats window if open
+            if current_stats_window and current_stats_window.winfo_exists():
+                current_stats_window.destroy()
 
-            #header label
-            tk.Label(stats_root, text=f"{username}'s Updated Stats", font=("Helvetica", 14, "bold"),
-                    fg="white", bg="darkgreen", width=25, relief="ridge", borderwidth=2).grid(row=0, column=0, columnspan=2, sticky="nsew")
+            #create new window for updated stats
+            current_stats_window = tk.Toplevel()
+            current_stats_window.title("Updated Stats")
 
-            #populate stats in window
-            for i, (key, value) in enumerate(updated_state.items(), start=1):
-                tk.Label(stats_root, text=str(key), font=("Helvetica", 11), width=15,
-                     relief="ridge", borderwidth=2).grid(row=i, column=0, sticky="nsew")
-                tk.Label(stats_root, text=str(value), font=("Helvetica", 11), width=15,
-                     relief="ridge", borderwidth=2).grid(row=i, column=1, sticky="nsew")
+            #header
+            tk.Label(current_stats_window, text="Updated Stats After Fight",
+                 font=("Helvetica", 14, "bold"), fg="white", bg="darkgreen",
+                 width=30, relief="ridge", borderwidth=2).grid(row=0, column=0, columnspan=2)
+
+            #display updated stats in table-like layout
+            for i, (key, val) in enumerate(list(updated_state.items())[:-1], start=2):
+                tk.Label(current_stats_window, text=key.capitalize(), width=15,
+                     relief="ridge").grid(row=i, column=0)
+                tk.Label(current_stats_window, text=str(val), width=15,
+                     relief="ridge").grid(row=i, column=1)
 
     #function to go back to action window
     def go_back():
@@ -411,30 +423,35 @@ def view_active_gamer_info(sock):
     active_root.mainloop() #keep window open
 
 def view_stats(sock, username):
-    #Request stats from server
+    global current_stats_window
+
+    #close old stats window if it exists
+    if current_stats_window and current_stats_window.winfo_exists():
+        current_stats_window.destroy()
+
+    #create and send request to get user stats
     request = {"action": "get_stats", "username": username}
     response = send_request(sock, request)
 
-    #Create stats window
-    stats_window = tk.Toplevel()
-    stats_window.configure(bg = "lightblue")
-    stats_window.geometry('250x300')
-    stats_window.title("Your Stats")
+    #extract gamer info from response
+    gamer = response.get("gamer", {})
 
-    if response.get("status") == "success":
-        gamer = response.get("gamer", {})
+    #create new window for displaying stats
+    current_stats_window = tk.Toplevel()
+    current_stats_window.title("Your Stats")
 
-        #Display formatted stats
-        tk.Label(stats_window, text=f"Username: {gamer.get('username', username)}", font=("Helvetica", 14, 'bold', 'underline')).pack(pady=3)
-        tk.Label(stats_window, text=f"Lives: {gamer.get('lives', username)}", font=("Helvetica", 'bold', 12)).pack(pady=3)
-        tk.Label(stats_window, text=f"Sword Strength: {gamer.get('sword', username)}", font=("Helvetica", 'bold', 12)).pack(pady=3)
-        tk.Label(stats_window, text=f"Shield Strength: {gamer.get('shield', username)}", font=("Helvetica", 'bold', 12)).pack(pady=3)
-        tk.Label(stats_window, text=f"Slaying Potion: {gamer.get('slaying_potion', username)}", font=("Helvetica", 'bold', 12)).pack(pady=3)
-        tk.Label(stats_window, text=f"Healing Potion: {gamer.get('healing_potion', username)}", font=("Helvetica", 'bold', 12)).pack(pady=3)
-    else:
-        #Show error if request failed
-        tk.Label(stats_window, text=response.get("message", "Failed to retrieve stats"), fg="red").pack(pady=10)
-    
+    #window header
+    tk.Label(current_stats_window, text="Your Current Stats",
+             font=("Helvetica", 14, "bold"), fg="white", bg="darkblue",
+             width=25, relief="ridge", borderwidth=2).grid(row=0, column=0, columnspan=2)
+
+    #display all stats in table-like layout
+    for i, (key, value) in enumerate(list(gamer.items())[:-1], start=2):
+        tk.Label(current_stats_window, text=key.capitalize(), width=15,
+                 relief="ridge").grid(row=i, column=0)
+        tk.Label(current_stats_window, text=str(value), width=15,
+                 relief="ridge").grid(row=i, column=1)
+        
 def main():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #udp socket
 
