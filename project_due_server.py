@@ -1,3 +1,5 @@
+#USERS: Jasmine Van Zoest && Alexander Parviz
+
 import socket
 import threading
 import json
