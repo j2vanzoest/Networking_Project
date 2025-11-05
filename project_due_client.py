@@ -131,9 +131,6 @@ def login(sock):
                     # call your existing function to display them
                     view_active_users(sock)
             
-
-
-            status_label.config(text=f"Login successful. Welcome, {username}!", fg="green", bg="lightblue")
             user_result = username #store username
             login_root.destroy() #close login
 
