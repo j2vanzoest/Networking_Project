@@ -1,3 +1,5 @@
+#USERS: Jasmine Van Zoest && Alexander Parviz
+
 import socket
 import json
 import os
@@ -340,18 +342,6 @@ def view_fight_logs(sock):
 
     else:
         messagebox.showerror("Error", "Failed to retrieve fight logs.") #error popup
-
-#original upload_avatar commented
-#def upload_avatar(sock, username):
-#    avatar_path = input("Enter the path to your avatar image (JPG): ").strip()
-#    if not os.path.isfile(avatar_path):
-#        print("[Client] File not found.")
-#        return
-#    with open(avatar_path, "rb") as f:
-#        avatar_data = list(f.read())
-#    request = {"action": "upload_avatar", "username": username, "filename": os.path.basename(avatar_path), "avatar_data": avatar_data}
-#    response = send_request(sock, request)
-#    print(f"[Client] {response.get('message')}")
 
 def upload_avatar(sock, username):
     avatar_path = filedialog.askopenfilename(title="Select Avatar", filetypes=[("JPG files", "*.jpg"), ("All files", "*.*")]) #file chooser
