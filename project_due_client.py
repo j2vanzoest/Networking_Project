@@ -119,8 +119,7 @@ def login(sock):
                 else:
                     # call your existing function to display them
                     view_active_users(sock)
-            else:
-                os._exit(0)
+            
 
 
             status_label.config(text=f"Login successful. Welcome, {username}!", fg="green", bg="lightblue")
@@ -245,14 +244,34 @@ def send_fight_request(sock, username):
             return
 
         #create and send request to server
-        request = {"action": "fight_request", "username": username, "boss": boss, "fighting_item": fighting_item, "fighting_strength": fighting_strength}
+        request = {
+            "action": "fight_request",
+            "username": username,
+            "boss": boss,
+            "fighting_item": fighting_item,
+            "fighting_strength": fighting_strength
+        }
         response = send_request(sock, request) #send and receive
         messagebox.showinfo("Fight Result", response.get("message")) #feedback popup
 
-        #if fight success, print updated state if present
+        #if fight success, show updated state window
         if "updated_state" in response:
-            print("[Client] Your updated state:")
-            print(json.dumps(response["updated_state"], indent=2)) #pretty print dict
+            updated_state = response["updated_state"]
+
+            #create popup for stats
+            stats_root = tk.Toplevel()
+            stats_root.title("Updated Stats")
+
+            #header label
+            tk.Label(stats_root, text=f"{username}'s Updated Stats", font=("Helvetica", 14, "bold"),
+                    fg="white", bg="darkgreen", width=25, relief="ridge", borderwidth=2).grid(row=0, column=0, columnspan=2, sticky="nsew")
+
+            #populate stats in window
+            for i, (key, value) in enumerate(updated_state.items(), start=1):
+                tk.Label(stats_root, text=str(key), font=("Helvetica", 11), width=15,
+                     relief="ridge", borderwidth=2).grid(row=i, column=0, sticky="nsew")
+                tk.Label(stats_root, text=str(value), font=("Helvetica", 11), width=15,
+                     relief="ridge", borderwidth=2).grid(row=i, column=1, sticky="nsew")
 
     #function to go back to action window
     def go_back():
@@ -344,26 +363,33 @@ def upload_avatar_from_path(sock, username, path):
     except Exception as e:
         messagebox.showerror("Upload Failed", str(e))
 
-def download_avatar(sock):
-    #Ask which user's avatar to download
-    target_user = simpledialog.askstring("Download Avatar", "Enter username to download avatar:")
+def download_avatar(sock, username):
+    #Ask for target user to fetch avatar from
+    target_user = simpledialog.askstring("Download Avatar", "Enter username of player to download avatar from:")
     if not target_user:
+        messagebox.showwarning("Input Error", "No username entered.")
         return
 
+    #Request avatar from server
     request = {"action": "get_avatar", "username": target_user}
     response = send_request(sock, request)
 
+    #If success, decode and save into user's avatar folder
     if response.get("status") == "success":
         avatar_data = base64.b64decode(response["avatar_data"])
-        save_path = filedialog.asksaveasfilename(defaultextension=".jpg", filetypes=[("JPEG files", "*.jpg")])
-        if not save_path:
-            return
+
+        #Create user's folder if missing
+        user_folder = os.path.join("avatars", f"{username}'s Avatar")
+        os.makedirs(user_folder, exist_ok=True)
+
+        #Save downloaded avatar with target user's name
+        save_path = os.path.join(user_folder, f"{target_user}.jpg")
         with open(save_path, "wb") as f:
             f.write(avatar_data)
-        messagebox.showinfo("Download Avatar", f"Avatar saved as {save_path}")
+
+        messagebox.showinfo("Avatar Downloaded", f"Saved {target_user}'s avatar to {save_path}")
     else:
         messagebox.showerror("Error", response.get("message", "Failed to download avatar"))
-
 def view_active_gamer_info(sock):
     request = {"action": "get_active_gamers"} #request
     response = send_request(sock, request)
@@ -400,11 +426,11 @@ def view_stats(sock, username):
 
         #Display formatted stats
         tk.Label(stats_window, text=f"Username: {gamer.get('username', username)}", font=("Helvetica", 14, 'bold', 'underline')).pack(pady=3)
-        tk.Label(stats_window, text=f"Lives: {gamer.get('lives', 'N/A')}", font=("Helvetica", 'bold', 12)).pack(pady=3)
-        tk.Label(stats_window, text=f"Sword Strength: {gamer.get('sword', 'N/A')}", font=("Helvetica", 'bold', 12)).pack(pady=3)
-        tk.Label(stats_window, text=f"Shield Strength: {gamer.get('shield', 'N/A')}", font=("Helvetica", 'bold', 12)).pack(pady=3)
-        tk.Label(stats_window, text=f"Slaying Potion: {gamer.get('slaying_potion', 'N/A')}", font=("Helvetica", 'bold', 12)).pack(pady=3)
-        tk.Label(stats_window, text=f"Healing Potion: {gamer.get('healing_potion', 'N/A')}", font=("Helvetica", 'bold', 12)).pack(pady=3)
+        tk.Label(stats_window, text=f"Lives: {gamer.get('lives', username)}", font=("Helvetica", 'bold', 12)).pack(pady=3)
+        tk.Label(stats_window, text=f"Sword Strength: {gamer.get('sword', username)}", font=("Helvetica", 'bold', 12)).pack(pady=3)
+        tk.Label(stats_window, text=f"Shield Strength: {gamer.get('shield', username)}", font=("Helvetica", 'bold', 12)).pack(pady=3)
+        tk.Label(stats_window, text=f"Slaying Potion: {gamer.get('slaying_potion', username)}", font=("Helvetica", 'bold', 12)).pack(pady=3)
+        tk.Label(stats_window, text=f"Healing Potion: {gamer.get('healing_potion', username)}", font=("Helvetica", 'bold', 12)).pack(pady=3)
     else:
         #Show error if request failed
         tk.Label(stats_window, text=response.get("message", "Failed to retrieve stats"), fg="red").pack(pady=10)
@@ -427,7 +453,7 @@ def main():
     tk.Button(action_root, text="Upload Avatar", activebackground="darkblue", 
               activeforeground="white", fg="darkblue", bg="white", command=lambda: upload_avatar(sock, username)).pack(pady=5, padx=2)
     tk.Button(action_root, text="Download Avatar", activebackground="darkblue",
-              activeforeground="white", fg="darkblue", bg="white", command=lambda: download_avatar(sock)).pack(pady=5, padx=2)
+              activeforeground="white", fg="darkblue", bg="white", command=lambda: download_avatar(sock, username)).pack(pady=5, padx=2)
     tk.Button(action_root, text="View Active Users", activebackground="darkblue", 
               activeforeground="white", fg="darkblue", bg="white", command=lambda: view_active_users(sock)).pack(pady=5, padx=2)
     tk.Button(action_root, text="Send Fight Request", activebackground="darkblue", 
