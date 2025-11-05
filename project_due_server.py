@@ -111,12 +111,20 @@ def handle_request(sock, data, address, manager):
             avatar_data = request.get("avatar_data")
             try:
                 avatar_bytes = bytes(avatar_data)
-                avatar_path = os.path.join(AVATAR_FOLDER, f"{username}.jpg")
+
+                #Create user-specific folder if missing
+                user_folder = os.path.join(AVATAR_FOLDER, f"{username}'s Avatar")
+                os.makedirs(user_folder, exist_ok=True)
+
+                #Save the avatar to the user's folder
+                avatar_path = os.path.join(user_folder, f"{username}.jpg")
                 with open(avatar_path, "wb") as f:
                     f.write(avatar_bytes)
+
+                #Update manager record
                 manager.gamers[username]["avatar"] = f"{username}.jpg"
-                response = {"status": "success", "message": "Avatar uploaded"}
-                print(f"[Server] Avatar uploaded for {username}")
+                response = {"status": "success", "message": f"Avatar uploaded to {user_folder}"}
+                print(f"[Server] Avatar uploaded for {username} -> {avatar_path}")
             except Exception as e:
                 response = {"status": "fail", "message": f"Avatar upload failed: {e}"}
                 print(f"[Server] Error uploading avatar for {username}: {e}")
@@ -125,14 +133,15 @@ def handle_request(sock, data, address, manager):
         elif action == "get_avatar":
             target_user = request.get("username")
             avatar_path = manager.gamers.get(target_user, {}).get("avatar")
+            user_folder = os.path.join(AVATAR_FOLDER, f"{target_user}'s Avatar")
+            full_path = os.path.join(user_folder, avatar_path) if avatar_path else None
 
-            if avatar_path and os.path.exists(os.path.join(AVATAR_FOLDER, avatar_path)):
-                with open(os.path.join(AVATAR_FOLDER, avatar_path), "rb") as f:
+            if avatar_path and os.path.exists(full_path):
+                with open(full_path, "rb") as f:
                     avatar_bytes = f.read()
                 avatar_encoded = base64.b64encode(avatar_bytes).decode()
                 response = {"status": "success", "avatar_data": avatar_encoded}
             else:
-                print(f"[Server] Rejected login for {username}")
                 response = {"status": "fail", "message": "Avatar not found or user invalid."}
                 print(f"[Server] Avatar retrieval failed for target user: {target_user}")
 
@@ -165,7 +174,6 @@ def handle_request(sock, data, address, manager):
                 response = {"status": "success", "gamer": gamer}
                 print(f"[Server] Sent stats for {username}")
             else:
-                print(f"[Server] Rejected login for {username}")
                 response = {"status": "fail", "message": "User not found"}     
 
         #Handle fight requests between two gamers
@@ -178,10 +186,9 @@ def handle_request(sock, data, address, manager):
                 response = {"status": "fail", "message": "Invalid usernames"}
                 print(f"[Server] Fight request rejected: invalid usernames {username}, {boss}")
             else:
-                print(f"[Server] Rejected login for {username}")
                 requester_state = manager.gamers[username] 
                 
-                 # Game-over check; Double checks any that died cannot play 
+                #Game-over check; Double checks any that died cannot play 
                 if requester_state["lives"] <= 0:
                      response = {"status": "fail", "message": "You cannot fight. Game over!"}
                      sock.sendto(json.dumps(response).encode(), address)
@@ -194,7 +201,6 @@ def handle_request(sock, data, address, manager):
                     response = {"status": "fail", "message": "Not enough strength"}
                     print(f"[Server] Fight request rejected for {username}: insufficient strength for {item}")
                 else:
-                    print(f"[Server] Rejected login for {username}")
                     #Prepare data for fight server
                     fight_data = {
                         "requester": username,
@@ -218,13 +224,10 @@ def handle_request(sock, data, address, manager):
                         print(f"[Server] Fight confirmed between {username} and {boss}")
                         print(f"[Server] Sent updated state to {username}")
                     else:
-                        print(f"[Server] Rejected login for {username}")
                         response = {"status": "fail", "message": "Fight server error"}
-                    
 
         #Unknown action fallback
         else:
-            print(f"[Server] Rejected login for {username}")
             response = {"status": "fail", "message": "Unknown action"}
             print(f"[Server] Unknown action received: {action}")
 
